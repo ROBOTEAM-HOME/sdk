@@ -80,6 +80,9 @@ import java.io.IOException
 import java.util.*
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
+import kotlin.math.atan2
+import kotlin.math.hypot
+import kotlin.math.roundToInt
 
 
 class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
@@ -107,6 +110,8 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
     private var debugReceiver: TemiBroadcastReceiver? = null
 
     private val assistantReceiver = AssistantChangeReceiver()
+
+    private var currentFloor: Floor? = null
 
     private val telepresenceStatusChangedListener: OnTelepresenceStatusChangedListener by lazy {
         object : OnTelepresenceStatusChangedListener("") {
@@ -496,7 +501,8 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
     }
 
     private fun getCurrentFloor() {
-        printLog(robot.getCurrentFloor()?.toString() ?: "Get current floor failed")
+        currentFloor = robot.getCurrentFloor()
+        printLog(currentFloor?.toString() ?: "Get current floor failed")
     }
 
     private fun loadFloorAtElevator() {
@@ -1497,6 +1503,33 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
     override fun onCurrentPositionChanged(position: Position) {
         tvPosition.text =
             "Position -> {${position.x}, ${position.y}, ${position.yaw}}, tilt: ${position.tiltAngle}"
+
+        // Here we will calculate angles to POI when current position changed.
+        with(currentFloor) {
+            // Click "Current Floor" button to fetch current floor before calculation.
+            this ?: return
+            Log.d("POI", "temi: x ${position.x}, y ${position.y}, yaw ${position.yaw}")
+            locations.forEachIndexed { index, location ->
+                val distance = hypot(location.x - position.x, location.y - position.y)
+                val atan2 = atan2(location.y - position.y, location.x - position.x)
+                // Range in [-Pi, Pi]
+                // Left POIs have positive radians, right POIs have negative radians.
+                // (+) radian <- temi -> radian (-)
+                val deltaRadian = normalizeRadian((atan2 - position.yaw).toDouble())
+                Log.d("POI", "Index $index: ${location.name}, x ${location.x}, y ${location.y}, distance $distance, deltaAngle ${Math.toDegrees(deltaRadian).roundToInt()}")
+            }
+        }
+    }
+    
+    private fun normalizeRadian(radian: Double): Double {
+        var normalizedRadian = radian
+        while (normalizedRadian > Math.PI) {
+            normalizedRadian -= 2 * Math.PI
+        }
+        while (normalizedRadian <= -Math.PI) {
+            normalizedRadian += 2 * Math.PI
+        }
+        return normalizedRadian
     }
 
     override fun onSequencePlayStatusChanged(status: Int) {
