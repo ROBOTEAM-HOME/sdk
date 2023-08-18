@@ -108,4 +108,10 @@
         
     </application>
 
+    <queries>
+        <package android:name="com.roboteam.teamy.camera.usa" />
+        <package android:name="com.roboteam.teamy.camera.china" />
+        <package android:name="com.roboteam.teamy.youtubeskill.usa.new" />
+    </queries>
+
 </manifest>

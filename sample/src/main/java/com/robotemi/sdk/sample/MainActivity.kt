@@ -1842,6 +1842,8 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
         for (page in Page.values()) {
             systemPages.add(page.toString())
         }
+        systemPages.add("Camera")
+        systemPages.add("YouTube")
         val arrayAdapter = ArrayAdapter(this, R.layout.item_dialog_row, R.id.name, systemPages)
         val dialog = AlertDialog.Builder(this)
             .setTitle("Select System Page")
@@ -1849,9 +1851,68 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
             .create()
         dialog.listView.onItemClickListener =
             OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
-                robot.startPage(
-                    Page.values()[position]
-                )
+                if (position < Page.values().size) {
+                    robot.startPage(
+                        Page.values()[position]
+                    )
+                } else {
+                    // Start app directly
+
+                    // Add <queries/> with package names to AndroidManifest
+                    // or declare <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/> for package visibility
+                    when (systemPages[position]) {
+                        "Camera" -> {
+                            // Take photo, take video, take sequence, open camera
+                            val globalVersion = robot.launcherVersion.contains("usa", true)
+                            val cameraPackage = if (globalVersion) "com.roboteam.teamy.camera.usa" else "com.roboteam.teamy.camera.china"
+                            val launchIntent = packageManager.getLaunchIntentForPackage(cameraPackage)
+                            if (launchIntent != null) {
+                                val bundle = Bundle()
+
+                                val nlpResult = NlpResult()
+                                // The following 4 actions are supported
+                                nlpResult.action = listOf(
+                                    "camera.take.picture",
+                                    "camera.take.video",
+                                    "camera.take.sequence",
+                                    "camera"
+                                )[0]
+                                bundle.putParcelable(SdkConstants.EXTRA_NLP_RESULT, nlpResult)
+                                launchIntent.putExtras(bundle)
+
+                                launchIntent.addFlags(
+                                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                            or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                            or Intent.FLAG_ACTIVITY_NEW_TASK
+                                )
+                                startActivity(launchIntent)
+                            }
+                        }
+                        "YouTube" -> {
+                            val youtubePackage = "com.roboteam.teamy.youtubeskill.usa.new"
+                            val launchIntent = packageManager.getLaunchIntentForPackage(youtubePackage)
+                            if (launchIntent != null) {
+                                val bundle = Bundle()
+
+                                val nlpResult = NlpResult()
+                                // The following 2 actions are supported
+                                nlpResult.action = listOf("video.play", "video.search")[0]
+                                nlpResult.params = mapOf("term" to "Lady Gaga")
+
+                                bundle.putParcelable(SdkConstants.EXTRA_NLP_RESULT, nlpResult)
+                                launchIntent.putExtras(bundle)
+
+                                launchIntent.addFlags(
+                                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                            or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                            or Intent.FLAG_ACTIVITY_NEW_TASK
+                                )
+                                startActivity(launchIntent)
+                            }
+                        }
+                    }
+
+                }
                 dialog.dismiss()
             }
         dialog.show()
