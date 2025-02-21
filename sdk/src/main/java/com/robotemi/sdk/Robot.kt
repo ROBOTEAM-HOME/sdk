@@ -3278,8 +3278,18 @@ class Robot private constructor(private val context: Context) {
                 inputStreamReader,
                 MapDataModel::class.java
             )
+            // Gson is not calling the constructor, so we need to manually create the MapImage object
+            // Ref: https://discuss.kotlinlang.org/t/solved-npe-when-calling-function-in-lazy-delegate-inside-my-kotlin-library-from-android-app/1498/4
+            val mapImage = MapImage(
+                typeId = json.mapImage.typeId,
+                rows = json.mapImage.rows,
+                cols = json.mapImage.cols,
+                dt = json.mapImage.dt,
+                _data = json.mapImage._data,
+            )
+
             mapDataModel = MapDataModel(
-                mapImage = json.mapImage,
+                mapImage = mapImage,
                 mapName = json.mapName ?: ""
             )
             val uriStr = StringBuffer("content://")
@@ -3377,27 +3387,6 @@ class Robot private constructor(private val context: Context) {
             Log.e(TAG, "getMapElements() - Permission denied")
             return null
         }
-//        val gson = Gson()
-//        val inputStream =
-//            getInputStreamByMediaKey(ContentType.MAP_DATA_IMAGE, "") ?: return null
-//        val inputStreamReader = InputStreamReader(inputStream)
-//        var mapDataModel: MapDataModel? = null
-//        try {
-//            mapDataModel = gson.fromJson(
-//                inputStreamReader,
-//                MapDataModel::class.java
-//            )
-//        } catch (e: JsonParseException) {
-//            Log.e(TAG, "getMapImage() - JSON parse error: ${e.message}")
-//        } finally {
-//            try {
-//                inputStream.close()
-//                inputStreamReader.close()
-//            } catch (e: IOException) {
-//                Log.e(TAG, "getMapImage() - ${e.message}")
-//            }
-//        }
-//        return mapDataModel
         var cursor: Cursor? = null
         val uriStr = StringBuffer("content://")
             .append(SdkConstants.PROVIDER_AUTHORITY)
@@ -3425,14 +3414,8 @@ class Robot private constructor(private val context: Context) {
         )
         val mapInfo = gson.fromJson(mapInfoJson, MapInfo::class.java)
 
-        val decoded = Base64.decode(mapDataBase64, Base64.NO_WRAP)
-        val unzipped =
-            GZIPInputStream(decoded.inputStream()).bufferedReader(Charsets.UTF_8)
-                .use { it.readText() }
-        val realData = Base64.decode(unzipped, Base64.NO_WRAP).map { it.toInt() }
-
         return MapDataModel(
-            mapImage = mapImage.copy(data = realData),
+            mapImage = mapImage.copy(dataBase64 = mapDataBase64),
             mapInfo = mapInfo,
         )
     }

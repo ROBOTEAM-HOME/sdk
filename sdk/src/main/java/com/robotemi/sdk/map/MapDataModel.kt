@@ -2,9 +2,11 @@ package com.robotemi.sdk.map
 
 import android.os.Parcel
 import android.os.Parcelable
+import android.util.Base64
 import androidx.annotation.IntRange
 import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName
+import java.util.zip.GZIPInputStream
 import kotlin.math.round
 
 data class MapDataModel(
@@ -59,8 +61,23 @@ data class MapImage(
     val rows: Int,
     val cols: Int,
     val dt: String,
-    val data: List<Int>
+    @SerializedName("data")
+    private val _data: List<Int>? = listOf(),
+    @Transient val dataBase64: String? = ""
 ) : Parcelable {
+
+    val data: List<Int> by lazy {
+        if (dataBase64.isNullOrBlank() && _data.isNullOrEmpty().not()) {
+            _data ?: listOf()
+        } else {
+            val decoded = Base64.decode(dataBase64, Base64.NO_WRAP)
+            val unzipped =
+                GZIPInputStream(decoded.inputStream()).bufferedReader(Charsets.UTF_8)
+                    .use { it.readText() }
+            Base64.decode(unzipped, Base64.NO_WRAP).map { it.toInt() }
+        }
+    }
+
     constructor(source: Parcel) : this(
         source.readString()!!,
         source.readInt(),
