@@ -23,6 +23,7 @@ import com.robotemi.sdk.model.MemberStatusModel;
 import com.robotemi.sdk.map.MapModel;
 import com.robotemi.sdk.map.Floor;
 import com.robotemi.sdk.voice.model.TtsVoice;
+import com.robotemi.sdk.map.Layer;
 
 interface ISdkService {
 
@@ -394,4 +395,10 @@ interface ISdkService {
     String getFollowSpeed();
 
     String getHomeScreenMode(in String packageName);
+
+    int isMapLost();
+
+    int isMapLocked();
+
+    int getReposeStatus();
 }

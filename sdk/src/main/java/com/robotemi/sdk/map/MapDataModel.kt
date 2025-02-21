@@ -311,6 +311,8 @@ const val MAP_ID = "map_id"
 const val MAP_INFO = "map_info"
 const val MAP_ELEMENTS = "map_elements"
 const val MAP_NAME = "map_name"
+const val MAP_IMAGE = "map_image"
+const val MAP_BASE64 = "map_base64"
 
 
 @Keep

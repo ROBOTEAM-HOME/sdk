@@ -142,6 +142,8 @@ enum class HardButton(val value: Int) {
     POWER(2),
     VOLUME(3),
     EMERGENCY_STOP(4),
+    VOLUME_UP(5),
+    VOLUME_DOWN(6)
     ;
 
     companion object {
@@ -151,6 +153,8 @@ enum class HardButton(val value: Int) {
             2 -> POWER
             3 -> VOLUME
             4 -> EMERGENCY_STOP
+            5 -> VOLUME_UP
+            6 -> VOLUME_DOWN
             else -> MAIN
         }
     }
@@ -178,12 +182,14 @@ enum class HardButton(val value: Int) {
         UNKNOWN(0),
         HOLD(1),
         RELEASED(2),
+        CLICKED(3),
         ;
         companion object {
             fun valueToEnum(value: Int? = 0) = when (value) {
                 0 -> UNKNOWN
                 1 -> HOLD
                 2 -> RELEASED
+                3 -> CLICKED
                 else -> UNKNOWN
             }
         }
@@ -269,6 +275,22 @@ enum class HomeScreenMode {
                 CLEAR.name -> CLEAR
                 else -> null
             }
+        }
+    }
+}
+
+enum class ReposeStatus(val value: Int) {
+    UNKNOWN(0),
+    IDLE(1),
+    REPOSING(2),
+    REPOSE_REQUIRED(3);
+
+    companion object {
+        fun valueToEnum(value: Int? = 0) = when (value) {
+            1 -> IDLE
+            2 -> REPOSING
+            3 -> REPOSE_REQUIRED
+            else -> UNKNOWN
         }
     }
 }

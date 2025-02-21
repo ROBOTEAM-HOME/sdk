@@ -54,6 +54,7 @@ import com.robotemi.sdk.map.LayerPose
 import com.robotemi.sdk.map.MapModel
 import com.robotemi.sdk.map.OnLoadFloorStatusChangedListener
 import com.robotemi.sdk.map.OnLoadMapStatusChangedListener
+import com.robotemi.sdk.map.OnMapStatusChangedListener
 import com.robotemi.sdk.model.CallEventModel
 import com.robotemi.sdk.model.DetectionData
 import com.robotemi.sdk.navigation.listener.OnCurrentPositionChangedListener
@@ -80,6 +81,7 @@ import kotlinx.android.synthetic.main.group_buttons.*
 import kotlinx.android.synthetic.main.group_map_and_movement.*
 import kotlinx.android.synthetic.main.group_resources.*
 import kotlinx.android.synthetic.main.group_settings_and_status.*
+import kotlinx.android.synthetic.main.group_settings_and_status.view.btnBatteryInfo
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -102,7 +104,8 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
     OnMovementVelocityChangedListener, OnMovementStatusChangedListener,
     OnContinuousFaceRecognizedListener, ITtsService, OnGreetModeStateChangedListener,
     TextToSpeech.OnInitListener, OnLoadFloorStatusChangedListener,
-    OnDistanceToDestinationChangedListener, OnSdkExceptionListener, OnRobotDragStateChangedListener {
+    OnDistanceToDestinationChangedListener, OnSdkExceptionListener, OnRobotDragStateChangedListener, OnMapStatusChangedListener,
+    OnButtonStatusChangedListener {
 
     private lateinit var robot: Robot
 
@@ -166,6 +169,7 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
      */
     override fun onStart() {
         super.onStart()
+        robot.addOnButtonStatusChangedListener(this)
         robot.addOnRobotReadyListener(this)
         robot.addNlpListener(this)
         robot.addOnBeWithMeStatusChangedListener(this)
@@ -191,6 +195,7 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
         robot.setActivityStreamPublishListener(this)
         robot.addOnDistanceToDestinationChangedListener(this)
         robot.addOnRobotDragStateChangedListener(this)
+        robot.addOnMapStatusChangedListener(this)
         robot.showTopBar()
         window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -204,6 +209,7 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
      * Removing the event listeners upon leaving the app.
      */
     override fun onStop() {
+        robot.removeOnButtonStatusChangedListener(this)
         robot.removeOnRobotReadyListener(this)
         robot.removeNlpListener(this)
         robot.removeOnBeWithMeStatusChangedListener(this)
@@ -236,6 +242,7 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
     }
 
     override fun onDestroy() {
+        robot.removeOnMapStatusChangedListener(this)
         robot.removeOnRequestPermissionResultListener(this)
         robot.removeOnTelepresenceEventChangedListener(this)
         robot.removeOnFaceRecognizedListener(this)
@@ -410,6 +417,42 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
                 view.tag = true
                 printLog("Nav Path Listener added")
             }
+        }
+
+        btnIsMapLost.setOnClickListener { printLog("Is Map Lost: ${robot.isMapLost()}") }
+        btnIsMapLocked.setOnClickListener { printLog("Is Map Locked: ${robot.isMapLocked()}") }
+
+        val mapStatusListener = object : OnMapStatusChangedListener {
+            override fun onMapStatusChanged(isMapLost: Boolean, isLocked: Boolean) {
+                printLog("Map Status: isMapLost $isMapLost, isLocked $isLocked")
+            }
+        }
+        btnMapStatus.setOnClickListener { view ->
+            if (view.tag == true) {
+                robot.removeOnMapStatusChangedListener(mapStatusListener)
+                view.tag = false
+                printLog("Map Status Listener removed")
+            } else {
+                robot.addOnMapStatusChangedListener(mapStatusListener)
+                view.tag = true
+                printLog("Map Status Listener added")
+            }
+        }
+
+        btnGetMapElements.setOnClickListener {
+            if (robot.checkSelfPermission(Permission.MAP) == Permission.GRANTED) {
+                printLog("map elements: ${robot.getMapElements()}")
+            }   else {
+                printLog("Map permission not granted")
+            }
+        }
+        btnGetMapImage.setOnClickListener {
+            if (robot.checkSelfPermission(Permission.MAP) == Permission.GRANTED) {
+                printLog("map image: ${robot.getMapImage()}")
+            }   else {
+                printLog("Map permission not granted")
+            }
+
         }
 
         btnBatteryInfo.setOnClickListener { getBatteryData() }
@@ -2551,5 +2594,13 @@ class MainActivity : AppCompatActivity(), NlpListener, OnRobotReadyListener,
 
     override fun onRobotDragStateChanged(isDragged: Boolean) {
         printLog("onRobotDragStateChanged $isDragged")
+    }
+
+    override fun onMapStatusChanged(isLost: Boolean, isLocked: Boolean) {
+        Log.d("onMapStatusChanged", "isLost: $isLost, isLocked: $isLocked")
+    }
+
+    override fun onButtonStatusChanged(hardButton: HardButton, status: HardButton.Status) {
+        Log.d("onButtonStatusChanged", "hardButton: $hardButton, status: $status")
     }
 }

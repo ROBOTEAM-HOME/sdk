@@ -117,4 +117,29 @@
         style="@style/ButtonCommon"
         android:text="Observe Nav Path" />
 
+    <Button
+        android:id="@+id/btnIsMapLost"
+        style="@style/ButtonCommon"
+        android:text="isMapLost" />
+
+    <Button
+        android:id="@+id/btnIsMapLocked"
+        style="@style/ButtonCommon"
+        android:text="isMapLocked" />
+
+    <Button
+        android:id="@+id/btnMapStatus"
+        style="@style/ButtonCommon"
+        android:text="Observe Map Status" />
+
+    <Button
+        android:id="@+id/btnGetMapElements"
+        style="@style/ButtonCommon"
+        android:text="getMapElements" />
+
+    <Button
+        android:id="@+id/btnGetMapImage"
+        style="@style/ButtonCommon"
+        android:text="getMapImage" />
+
 </LinearLayout>

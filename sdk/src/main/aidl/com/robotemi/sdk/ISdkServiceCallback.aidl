@@ -13,6 +13,7 @@ import com.robotemi.sdk.navigation.model.Position;
 import com.robotemi.sdk.model.DetectionData;
 import com.robotemi.sdk.face.ContactModel;
 import com.robotemi.sdk.exception.SdkException;
+import com.robotemi.sdk.map.Layer;
 
 interface ISdkServiceCallback {
 
@@ -117,4 +118,12 @@ interface ISdkServiceCallback {
     boolean onButtonStatusChanged(in int buttonType, in int buttonStatus);
 
     boolean onGoToNavPathChanged(in String path);
+
+    boolean onMapStatusChanged(in boolean isLost, in boolean isLocked);
+
+    boolean onButtonModeChanged(in int buttonType, in int buttonMode);
+
+    boolean onMapElementsChanged();
+
+    boolean onMapNameChanged(in String mapName);
 }
